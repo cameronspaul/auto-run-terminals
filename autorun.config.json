@@ -1,0 +1,8 @@
+{
+  "layout": "tabs",
+  "closeExisting": true,
+  "terminals": [
+    { "name": "Frontend", "command": "npm run dev" },
+    { "name": "Convex Dev", "command": "npx convex dev" }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "name": "autorun-terminals",
+  "displayName": "Auto-Run Terminals",
+  "description": "Automatically open and run configured terminals on startup with split or tab layout.",
+  "version": "0.0.1",
+  "publisher": "your-name",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Auto-Run Terminals",
+      "properties": {
+        "autorun.layout": {
+          "type": "string",
+          "enum": [
+            "split",
+            "tabs"
+          ],
+          "default": "split",
+          "description": "Choose 'split' for side-by-side panes or 'tabs' for separate terminal instances."
+        },
+        "autorun.terminals": {
+          "type": "array",
+          "default": [
+            {
+              "name": "Convex Dev",
+              "command": "npx convex dev"
+            },
+            {
+              "name": "Frontend",
+              "command": "npm run dev"
+            }
+          ],
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "command": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "command"
+            ]
+          },
+          "description": "List of terminals to launch and run automatically."
+        },
+        "autorun.configPath": {
+          "type": "string",
+          "default": "autorun.config.json",
+          "description": "Optional workspace-relative path to a JSON config file. If present, it overrides the settings above."
+        },
+        "autorun.closeExisting": {
+          "type": "boolean",
+          "default": true,
+          "description": "Close any existing terminals before launching configured ones."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "echo \"No lint configured\""
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "@types/vscode": "^1.85.0",
+    "tslib": "^2.6.2",
+    "typescript": "^5.4.5"
+  }
+}
