@@ -11,17 +11,69 @@ interface AutorunConfig {
 	layout: LayoutOption;
 	terminals: TerminalConfig[];
 	closeExisting: boolean;
+	launchOnStart: boolean;
 }
 
 const SPLIT_WARNING_THRESHOLD = 3;
 const DEFAULT_LAYOUT: LayoutOption = 'split';
 const DEFAULT_CONFIG_PATH = 'autorun.config.json';
 const DEFAULT_CLOSE_EXISTING = true;
+const DEFAULT_LAUNCH_ON_START = true;
+
+let statusBarItem: vscode.StatusBarItem;
 
 export async function activate(context: vscode.ExtensionContext) {
+	// Register commands
+	context.subscriptions.push(
+		vscode.commands.registerCommand('autorun.launchTerminals', async () => {
+			await launchTerminals();
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('autorun.toggleLaunchOnStart', async () => {
+			const settings = vscode.workspace.getConfiguration('autorun');
+			const currentValue = settings.get<boolean>('launchOnStart') ?? DEFAULT_LAUNCH_ON_START;
+			await settings.update('launchOnStart', !currentValue, vscode.ConfigurationTarget.Global);
+			updateStatusBar(!currentValue);
+			void vscode.window.showInformationMessage(
+				`Auto-Run Terminals: Launch on start is now ${!currentValue ? 'enabled' : 'disabled'}`
+			);
+		})
+	);
+
+	// Create status bar button
+	statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+	statusBarItem.command = 'autorun.launchTerminals';
+	context.subscriptions.push(statusBarItem);
+
+	// Check if we should auto-launch on startup
+	const config = await resolveConfig();
+	updateStatusBar(config.launchOnStart);
+	statusBarItem.show();
+
+	if (config.launchOnStart) {
+		await launchTerminals();
+	}
+}
+
+function updateStatusBar(launchOnStart: boolean): void {
+	if (launchOnStart) {
+		statusBarItem.text = '$(terminal) Auto-Terminals';
+		statusBarItem.tooltip = 'Click to launch configured terminals (Auto-launch ON)';
+	} else {
+		statusBarItem.text = '$(terminal) Launch Terminals';
+		statusBarItem.tooltip = 'Click to launch configured terminals (Auto-launch OFF)';
+	}
+}
+
+async function launchTerminals(): Promise<void> {
 	const { layout, terminals, closeExisting } = await resolveConfig();
 
 	if (terminals.length === 0) {
+		void vscode.window.showWarningMessage(
+			'Auto-Run Terminals: No terminals configured. Add terminals to your settings or config file.'
+		);
 		return;
 	}
 
@@ -62,6 +114,10 @@ export async function activate(context: vscode.ExtensionContext) {
 			}
 		}
 	}
+
+	void vscode.window.showInformationMessage(
+		`Auto-Run Terminals: Launched ${terminals.length} terminal(s)`
+	);
 }
 
 async function resolveConfig(): Promise<AutorunConfig> {
@@ -70,6 +126,7 @@ async function resolveConfig(): Promise<AutorunConfig> {
 		layout: (settings.get<LayoutOption>('layout') ?? DEFAULT_LAYOUT) as LayoutOption,
 		terminals: settings.get<TerminalConfig[]>('terminals') ?? [],
 		closeExisting: settings.get<boolean>('closeExisting') ?? DEFAULT_CLOSE_EXISTING,
+		launchOnStart: settings.get<boolean>('launchOnStart') ?? DEFAULT_LAUNCH_ON_START,
 	};
 
 	const configPath = settings.get<string>('configPath') || DEFAULT_CONFIG_PATH;
@@ -93,6 +150,8 @@ async function resolveConfig(): Promise<AutorunConfig> {
 			terminals: parsed.terminals,
 			closeExisting:
 				typeof parsed.closeExisting === 'boolean' ? parsed.closeExisting : fallback.closeExisting,
+			launchOnStart:
+				typeof parsed.launchOnStart === 'boolean' ? parsed.launchOnStart : fallback.launchOnStart,
 		};
 	} catch (error) {
 		if (error instanceof vscode.FileSystemError && error.code === 'FileNotFound') {
@@ -118,8 +177,10 @@ function isValidConfig(data: unknown): data is AutorunConfig {
 	const hasTerminals = Array.isArray(candidate.terminals);
 	const hasValidCloseExisting =
 		typeof candidate.closeExisting === 'undefined' || typeof candidate.closeExisting === 'boolean';
+	const hasValidLaunchOnStart =
+		typeof candidate.launchOnStart === 'undefined' || typeof candidate.launchOnStart === 'boolean';
 
-	if (!hasValidLayout || !hasTerminals || !hasValidCloseExisting) {
+	if (!hasValidLayout || !hasTerminals || !hasValidCloseExisting || !hasValidLaunchOnStart) {
 		return false;
 	}
 

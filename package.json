@@ -2,8 +2,17 @@
   "name": "autorun-terminals",
   "displayName": "Auto-Run Terminals",
   "description": "Automatically open and run configured terminals on startup with split or tab layout.",
-  "version": "0.0.1",
-  "publisher": "your-name",
+  "version": "0.0.2",
+  "publisher": "cameronspaul",
+  "author": {
+    "name": "Cameron Paul",
+    "url": "https://github.com/cameronspaul"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cameronspaul/autorun-terminals"
+  },
+  "homepage": "https://github.com/cameronspaul/autorun-terminals",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -65,9 +74,34 @@
           "type": "boolean",
           "default": true,
           "description": "Close any existing terminals before launching configured ones."
+        },
+        "autorun.launchOnStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically launch terminals when VS Code starts. When disabled, use the command palette to launch manually."
         }
       }
-    }
+    },
+    "commands": [
+      {
+        "command": "autorun.launchTerminals",
+        "title": "Launch Configured Terminals",
+        "category": "Auto-Run Terminals",
+        "icon": "$(terminal)"
+      },
+      {
+        "command": "autorun.toggleLaunchOnStart",
+        "title": "Toggle Launch on Start",
+        "category": "Auto-Run Terminals",
+        "icon": "$(sync)"
+      }
+    ],
+    "jsonValidation": [
+      {
+        "fileMatch": "autorun.config.json",
+        "url": "./schema.json"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

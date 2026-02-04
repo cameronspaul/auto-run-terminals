@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "layout": {
+      "type": "string",
+      "enum": ["split", "tabs"],
+      "default": "split",
+      "description": "Choose 'split' for side-by-side panes or 'tabs' for separate terminal instances."
+    },
+    "closeExisting": {
+      "type": "boolean",
+      "default": true,
+      "description": "Close any existing terminals before launching configured ones."
+    },
+    "launchOnStart": {
+      "type": "boolean",
+      "default": true,
+      "description": "Automatically launch terminals when VS Code: starts."
+    },
+    "terminals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Display name for the terminal"
+          },
+          "command": {
+            "type": "string",
+            "description": "Command to run in the terminal"
+          }
+        },
+        "required": ["name", "command"]
+      },
+      "description": "List of terminals to launch and run automatically."
+    }
+  },
+  "required": ["terminals"]
+}
